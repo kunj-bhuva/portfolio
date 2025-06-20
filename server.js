@@ -1,23 +1,29 @@
+// Load environment variables
 require('dotenv').config();
+
+// Core packages
 const express = require("express");
-const router = express.Router();
+const path = require("path");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 
-
+// Initialize express app and router
 const app = express();
+const router = express.Router();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use("/", router);
-app.listen(5000, () => console.log("Server running on http://localhost:5000"));
 
+// Email credentials from .env
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
+console.log("Email User:", EMAIL_USER ? "Loaded ✅" : "Missing ❌");
+console.log("Email Pass:", EMAIL_PASS ? "Loaded ✅" : "Missing ❌");
 
-console.log("Email User:", EMAIL_USER);
-console.log("Email Pass:", EMAIL_PASS);
-
+// Configure Nodemailer
 const contactEmail = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -26,6 +32,7 @@ const contactEmail = nodemailer.createTransport({
   },
 });
 
+// Verify transporter
 contactEmail.verify((error) => {
   if (error) {
     console.log("Email verification error:", error);
@@ -34,13 +41,14 @@ contactEmail.verify((error) => {
   }
 });
 
+// Contact route
 router.post("/contact", (req, res) => {
   const { firstName, lastName, email, phone, message } = req.body;
   const name = `${firstName} ${lastName}`;
 
   const mail = {
     from: `${name} <${email}>`,
-    to: "kunjbhuva894@gmail.com", // your destination email
+    to: "kunjbhuva894@gmail.com", // Your destination email
     subject: "Contact Form Submission - Portfolio",
     html: `
       <h3>New message from your portfolio</h3>
@@ -62,12 +70,16 @@ router.post("/contact", (req, res) => {
   });
 });
 
-
-const path = require("path");
-
-// Serve React frontend from build
+// Serve static files from React frontend
 app.use(express.static(path.join(__dirname, "build")));
 
+// Handle all other routes with React frontend
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
+});
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🌐 Server running on port ${PORT}`);
 });
